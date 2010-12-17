@@ -1,0 +1,34 @@
+Index: lib/rake/testtask.rb
+===================================================================
+--- lib/rake/testtask.rb	(revision 642)
++++ lib/rake/testtask.rb	(working copy)
+@@ -69,6 +69,12 @@
+     # Array of commandline options to pass to ruby when running test loader.
+     attr_accessor :ruby_opts
+ 
++    # Proc to be executed when the Ruby process running the tests finishes.
++    # The Proc will be passed two parameters: ok, status
++    # ok is a boolean indicating whether the Ruby process executed successfully
++    # status is the correponding Process::Status object for the Ruby process
++    attr_accessor :on_result
++
+     # Explicitly define the list of test files to be included in a
+     # test.  +list+ is expected to be an array of file names (a
+     # FileList is acceptable).  If both +pattern+ and +test_files+ are
+@@ -88,6 +94,7 @@
+       @warning = false
+       @loader = :rake
+       @ruby_opts = []
++      @on_result = nil
+       yield self if block_given?
+       @pattern = 'test/test*.rb' if @pattern.nil? && @test_files.nil?
+       define
+@@ -114,7 +121,7 @@
+           ruby @ruby_opts.join(" ") +
+             " \"#{run_code}\" " +
+             file_list.collect { |fn| "\"#{fn}\"" }.join(' ') +
+-            " #{option_list}"
++            " #{option_list}", &@on_result
+         end
+       end
+       self
